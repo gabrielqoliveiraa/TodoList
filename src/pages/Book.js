@@ -9,217 +9,170 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 
 
-const Book = ({navigation}) => {
+const Book = ({ navigation }) => {
+  const book = navigation.getParam("book", {
+    title: '',
+    description: '',
+    read: false,
+    photo: ''
+  });
+  
+  const isEdit = navigation.getParam("isEdit", false);
 
-    const book = navigation.getParam('book', {
-        title: '',
-        description: '',
-        read: false,
-        photo: ''
+  const [books, setBooks] = useState([]);
+  const [title, setTitle] = useState(book.title);
+  const [description, setDescription] = useState(book.description);
+  const [read, setRead] = useState(book.read);
+  const [photo, setPhoto] = useState(book.photo);
+
+  useEffect(() => {
+    AsyncStorage.getItem("books").then(data => {
+      if(data) {
+        const book = JSON.parse(data);
+        setBooks(book);
+      }
     })
+  }, []);
 
-
-    const isEdit = navigation.getParam('isEdit', false);
-
-    const [books, setbooks] = useState([])
-    const [title, setitle] = useState(book.title)
-    const [description, setdescription] = useState(book.description)
-    const [read, setread] = useState(book.read)
-    const [photo, setphoto] = useState(book.photo)
-
-
-    useEffect(() => {
-        AsyncStorage.getItem("books").then(data =>{
-            const book = JSON.parse(data)
-            setbooks(book)
-        })
-    }, [])  
-
-    
-    
-        
-
-    
-
-    const isValid = () => {
-        if(title !== undefined && title !== ''){
-            return true;
-        } 
-        return false;
+  const isValid = () => {
+    if (title !== undefined && title !== '') {
+      return true;
     }
 
+    return false;
+  };
+
+  const onSave = async () => {
+    if (isValid()) {
     
-    
-    
-    const onSave = async () => {
-        if (isValid()){
+      if (isEdit) {
+        // altera o livro corrente
+        let newBooks = books;
 
-            if (isEdit) {
-                let newBooks = books
+        newBooks.map(item => {
+          if(item.id === book.id) {
+            item.title = title;
+            item.description = description;
+            item.read = read;
+            item.photo = photo;
+          }
+          return item;
+        });
 
-                newBooks.map((item) => {
-                    if(item.id == book.id){
-                        item.title = title
-                        item.description = description
-                        item.read = read;
-                        item.photo = photo
-                    }
-                    return item
-                });
-                console.log(books)
-                console.log(newBooks)
+        console.log("books", books);
+        console.log("newBooks", newBooks);
 
-                await AsyncStorage.setItem("books", JSON.stringify(newBooks));
+        await AsyncStorage.setItem('books', JSON.stringify(newBooks));
+      } else {
+        // adiciona um novo livro
+        const id = Math.random(5000).toString();
+        const data = {
+          id,
+          title,
+          description,
+          photo,
+        };
 
+        books.push(data);
+        await AsyncStorage.setItem('books', JSON.stringify(books));
+      }
 
-            } else {
-                const id = (books.length + 1).toString()
-                const data = {
-                    id,
-                    title,
-                    description, 
-                    photo,
-                }   
-
-                books.push(data)
-                await AsyncStorage.setItem("books", JSON.stringify(books));
-                
-            }
-
-            navigation.goBack();
-            
-            
-
-        } else {
-            console.log('invalido')
-        }
+      navigation.goBack();
+    } else {
+      console.log('Inválido!');
     }
-        
-
-
-                
-
-
-
-
-
-
-
-
-
-
-
+  };
 
   return (
-    <View style={styles.containar}>
-      <Text style={styles.header}>Inclua seu novo livro</Text>
-
-      <View>
-        <TextInput
+    <View style={styles.container}>
+      <Text style={styles.pageTitle}>Inclua seu novo livro...</Text>
+      <TextInput
         style={styles.input}
-        placeholder='Título'
+        placeholder="Título"
         value={title}
-        onChangeText={(text)=>{setitle(text)}}
-        />
-
-        <TextInput
+        onChangeText={text => {
+          setTitle(text);
+        }}
+      />
+      <TextInput
         style={styles.input}
-        placeholder='Descrição'
+        placeholder="Descrição"
         multiline={true}
         numberOfLines={4}
         value={description}
-        onChangeText={(text)=>{setdescription(text)}}
-        />
-      </View>
+        onChangeText={text => {
+          setDescription(text);
+        }}
+      />
 
-       <TouchableOpacity style={styles.camera}> 
-        <Icon name='photo-camera' size={18} color='#fff' />
+      <TouchableOpacity style={styles.cameraButton}>
+        <Icon name="photo-camera" size={18} color="#fff" />
       </TouchableOpacity>
 
-
-
-      <TouchableOpacity onPress={onSave} style={([styles.cadastrar, (isValid()) ? '': styles.saveButtonIvalid ])}> 
-        <Text style={{fontSize: 16, color: '#ffff', textAlign:'center'}}>{isEdit ? 'Atualizar':'Cadastrar'}</Text>
+      <TouchableOpacity
+        style={[styles.saveButton, !isValid() ? styles.saveButtonInvalid : '']}
+        onPress={onSave}>
+        <Text style={styles.saveButtonText}>{isEdit ? "Atualizar" : "Cadastrar"}</Text>
       </TouchableOpacity>
 
-       <TouchableOpacity onPress={() =>{navigation.goBack()}} style={styles.cancel}> 
-        <Text style={{fontSize: 16, textAlign:'center', color: '#b2bec3'}}>Cancelar</Text>
+      <TouchableOpacity
+        style={styles.cancelButton}
+        onPress={() => {
+          navigation.goBack();
+        }}>
+        <Text style={styles.cancelButtonText}>Cancelar</Text>
       </TouchableOpacity>
-    
-    
     </View>
-  )
-}
-      
-      
-      
-      
-
-    
-    
-    
-
+  );
+};
 
 const styles = StyleSheet.create({
-  containar: {
-      flex: 1, 
-      padding: 10, 
-      
+  container: {
+    flex: 1,
+    padding: 10,
   },
-  header: {
-    fontSize: 22,
+  pageTitle: {
     textAlign: 'center',
+    fontSize: 16,
     marginBottom: 20,
   },
-
   input: {
     fontSize: 16,
-    borderBottomColor: '#00cec9',
-    borderBottomWidth: 2,
-    marginBottom: 10
-  },
-
-  cadastrar: {
-    backgroundColor: '#0984e3',
-    borderRadius: 20,
-    alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderBottomColor: '#f39c12',
+    borderBottomWidth: 1,
     marginBottom: 10,
-
   },
-    
-
-  camera: {
-    backgroundColor: '#74b9ff',
+  cameraButton: {
+    backgroundColor: '#f39c12',
     borderRadius: 50,
-    width: 30,
-    height: 30,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
+  saveButton: {
+    backgroundColor: '#f39c12',
+    alignSelf: 'center',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  saveButtonInvalid: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  cancelButton: {
+    alignSelf: 'center',
+  },
+  cancelButtonText: {
+    color: '#95a5a6',
+  },
+});
 
-  cancel: {
-    alignSelf: 'center'
-
-  }, 
-  saveButtonIvalid:{
-      opacity: 0.5,
-  }
-
-})
-    
-
-    
-    
-
-
-
-
-
-
-
-
-export default Book
+export default Book;
