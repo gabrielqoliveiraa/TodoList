@@ -1,26 +1,40 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import {View, StyleSheet, Text, TouchableOpacity, FlatList} from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 import Icon from "react-native-vector-icons/MaterialIcons"
 
 
 const Main = ({navigation}) => {
+  const [books, setbooks] = useState([]) 
 
-  const data =[
-    {
-      id: 1,
-      tittle: "Clean code", 
-      read: false,
-      photo: null
-    },
-    {
-      id:2,
-      tittle: "Js",
-      read: true,
-      photo: null
+
+  useEffect(() => {
+      AsyncStorage.getItem("books").then(data =>{
+          const book = JSON.parse(data)
+          setbooks(book)
+      })
+    }, [])  
+
+
+ const onBookEdit = (bookId) => {
+      const book = books.find(item => item.id == bookId)
+      navigation.navigate('Book', {book: book, isEdit: true}) 
     }
-  ]
+
+ const onBookDelete = async (bookId) => {
+    const newBooks = books.filter(item => item.id !== bookId)
+    await AsyncStorage.setItem("books", JSON.stringify(newBooks))
+    setbooks(newBooks)
+    }
+
+
+
+
+    
+  
 
 
   return (
@@ -35,11 +49,26 @@ const Main = ({navigation}) => {
     
 
     <FlatList
-      data={data}
+      data={books}
       renderItem={({item }) => (
-        <Text>{item.tittle}</Text>
+        <View style={styles.itemscontainer}>
+            <TouchableOpacity style={styles.itembutton}>
+                <Text>{item.title}</Text>
+            </TouchableOpacity>
+
+
+            <TouchableOpacity onPress={() => onBookEdit(item.id)}>
+                <Icon name="create" size={14} color='#74b9ff'/>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => onBookDelete(item.id)}>
+                <Icon name="delete" size={14} color='#ff7675'/>
+            </TouchableOpacity>
+
+
+        </View>
       )}
-      keyExtractor={item => item.id.toString()}
+      keyExtractor={item => item.id}
     />
 
     </View>
@@ -70,6 +99,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
 
+  },
+
+  itemscontainer: {
+      flexDirection: 'row'
+  },
+  itembutton: {
+      flex: 1,
   }
     
   
