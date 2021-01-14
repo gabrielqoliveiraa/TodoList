@@ -62,7 +62,7 @@ const Book = ({ navigation }) => {
         console.log("books", books);
         console.log("newBooks", newBooks);
 
-        await AsyncStorage.setItem('books', JSON.stringify(newBooks));
+        await AsyncStorage.setItem("books", JSON.stringify(newBooks));
       } else {
         // adiciona um novo livro
         const id = Math.random(5000).toString();

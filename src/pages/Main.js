@@ -11,7 +11,7 @@ const Main = ({navigation}) => {
     const [books, setBooks] = useState([]);
     
     useEffect(() => {
-      AsyncStorage.getItem("books").then(data => {
+       AsyncStorage.getItem("books").then(data => {
         const book = JSON.parse(data);
         setBooks(book);
       })
